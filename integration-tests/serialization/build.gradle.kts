@@ -9,7 +9,7 @@ plugins {
 group = "$group.integration"
 
 repositories {
-    maven("https://software.r3.com/artifactory/corda")
+    maven("https://download.corda.net/maven/corda")
     maven("https://oss.sonatype.org/content/repositories/snapshots/")
 }
 

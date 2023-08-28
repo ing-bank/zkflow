@@ -30,7 +30,9 @@ pluginManagement {
         google()
         mavenCentral()
         maven("https://plugins.gradle.org/m2/")
-        maven("https://software.r3.com/artifactory/corda")
+        maven("https://download.corda.net/maven/corda-releases")
+        maven("https://download.corda.net/maven/corda-dependencies")
+        maven("https://download.corda.net/maven/corda")
     }
 }
 
